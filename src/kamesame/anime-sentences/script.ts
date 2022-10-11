@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KameSame Anime Sentences
 // @description  Adds example sentences from anime movies and shows for vocabulary from immersionkit.com
-// @version      0.1
+// @version      0.2
 // @author       Timberpile
 // @namespace    ksanimesentences
 
@@ -84,7 +84,7 @@ declare global {
                 this.topEl.remove()
                 delete this.topEl
                 delete this.sentencesEl
-                // delete this.item
+                delete this.item
                 delete this.immersionKitData
             }
         }
@@ -477,7 +477,7 @@ declare global {
 
         if (ksof) {
             ksof.include('Settings');
-
+            
             await ksof.ready('Settings')
             const state = new State()
             await state.loadSettings()
@@ -486,14 +486,14 @@ declare global {
             if (ksof.itemInfo.on == 'itemPage') {
                 const FACTS_QUERY = '#app.kamesame #item .facts .fact'
                 const FACTS_WATCH_STATE = 'ksof.dom_observer.'+FACTS_QUERY
-     
+
                 ksof.add_dom_observer(FACTS_QUERY)
                 ksof.wait_state(FACTS_WATCH_STATE, 'exists', () => { state.onExamplesVisible(ksof.itemInfo) }, true)
             }
             else if (ksof.itemInfo.on == 'review') {
                 const OUTPUT_ITEM_QUERY = '.outcome p a.item'
                 const OUTPUT_ITEM_WATCH_STATE = 'ksof.dom_observer.'+OUTPUT_ITEM_QUERY
-     
+                
                 ksof.add_dom_observer(OUTPUT_ITEM_QUERY)
                 ksof.wait_state(OUTPUT_ITEM_WATCH_STATE, 'exists', () => { state.onExamplesVisible(ksof.itemInfo) }, true)
                 ksof.wait_state(OUTPUT_ITEM_WATCH_STATE, 'gone', state.onExamplesHidden, true)
