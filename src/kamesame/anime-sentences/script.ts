@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KameSame Anime Sentences
 // @description  Adds example sentences from anime movies and shows for vocabulary from immersionkit.com
-// @version      0.2
+// @version      0.2.1
 // @author       Timberpile
 // @namespace    ksanimesentences
 
@@ -104,7 +104,7 @@ declare global {
             settingsBtn.textContent = '⚙'
             settingsBtn.setAttribute('class', 'fa fa-gear');
             settingsBtn.setAttribute('style', 'cursor: pointer; vertical-align: middle; margin-left: 10px;');
-            settingsBtn.onclick = this.openSettings
+            settingsBtn.onclick = () => { this.openSettings() }
             const sentencesEl = document.createElement('div');
             sentencesEl.innerText = 'Loading...'
     
@@ -240,7 +240,7 @@ declare global {
             // Click anywhere plays the audio
             const exampleEls = document.querySelectorAll('.anime-example')
             exampleEls.forEach((a:any) => {
-                a.onclick = function () {
+                a.onclick = () => {
                     const audio = this.querySelector('audio')
                     audio?.play()
                 }
@@ -248,7 +248,7 @@ declare global {
     
             // Assigning onclick function to .show-on-click elements
             document.querySelectorAll('.show-on-click').forEach((a:any) => {
-                a.onclick = function () {
+                a.onclick = () => {
                     this.classList.toggle('show-on-click');
                 }
             });
