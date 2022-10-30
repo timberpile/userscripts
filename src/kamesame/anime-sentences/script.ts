@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name         KameSame Anime Sentences
 // @description  Adds example sentences from anime movies and shows for vocabulary from immersionkit.com
-// @version      0.2.2
+// @version      0.2.3
 // @author       Timberpile
 // @namespace    ksanimesentences
 
-// @match        http*://www.kamesame.com/app/reviews/study/*
-// @match        http*://www.kamesame.com/app/items/*
+// @match        http*://www.kamesame.com/app*
 
 // @copyright    2022+, Paul Connolly, Timberpile
 // @license      MIT; http://opensource.org/licenses/MIT
@@ -23,22 +22,19 @@ export = null
 import { KSOF } from '../types/ksof'
 import { AS } from './types'
 
-declare global {
-    interface Window {
+((global: Window) => {
+    type MyWindow = {
         //eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         ksof: KSOF.Core.Module & KSOF.Settings.Module
         $: JQueryStatic
     }
-}
-
-(() => {
 
     //--------------------------------------------------------------------------------------------------------------//
     //-----------------------------------------------INITIALIZATION-------------------------------------------------//
     //--------------------------------------------------------------------------------------------------------------//
 
-    const { ksof } = window
+    const { ksof } = global as unknown as MyWindow
 
     const scriptId = 'anime-sentences';
     const scriptName = 'Anime Sentences';
@@ -97,7 +93,7 @@ declare global {
             const parentEl = document.createElement('div');
             parentEl.setAttribute('id', 'anime-sentences-parent')
     
-            const header = this.item.on !== 'itemPage' ? document.createElement('h2') : document.createElement('h3');
+            const header = ksof.pageInfo.on !== 'itemPage' ? document.createElement('h2') : document.createElement('h3');
             header.innerText = 'Anime Sentences'
     
             const settingsBtn = document.createElement('i');
@@ -115,14 +111,14 @@ declare global {
             this.topEl = parentEl
     
             // if (this.item.injector) {
-            //     if (this.item.on === 'lesson') {
+            //     if (ksof.pageInfo.on === 'lesson') {
             //         this.item.injector.appendAtTop(null, parentEl)
             //     } else { // itemPage, review
             //         this.item.injector.append(null, parentEl)
             //     }
             // }
     
-            if (this.item.on === 'itemPage') {
+            if (ksof.pageInfo.on === 'itemPage') {
                 document.querySelector('#app.kamesame #item')?.appendChild(parentEl)
             } else { // itemPage, review
                 document.querySelector('.outcome')?.appendChild(parentEl)
@@ -222,8 +218,7 @@ declare global {
                 }
             }
     
-            const sentencesEl = this.sentencesEl
-            if(sentencesEl) sentencesEl.innerHTML = html
+            if(this.sentencesEl) this.sentencesEl.innerHTML = html
     
             const audios = document.querySelectorAll('.anime-example audio')
             audios.forEach((a:any) => {
@@ -381,8 +376,11 @@ declare global {
         }
 
         onExamplesVisible(item: KSOF.Core.ItemInfo) {
-            if (ksof.itemInfo.on == 'review') {
-                if (ksof.reviewInfo.answer_correct != 'exactly_correct') {
+            if (ksof.pageInfo.on == 'review') {
+                if (ksof.reviewInfo.answer_correct == 'alternative_match') {
+                    return
+                }
+                if (ksof.reviewInfo.answer_correct == 'alternative_match_completion') {
                     return
                 }
             }
@@ -483,25 +481,15 @@ declare global {
             await state.loadSettings()
             state.processLoadedSettings()
 
-            if (ksof.itemInfo.on == 'itemPage') {
-                const FACTS_QUERY = '#app.kamesame #item .facts .fact'
-                const FACTS_WATCH_STATE = 'ksof.dom_observer.'+FACTS_QUERY
+            ksof.on('ksof.page_changed', () => { state.onExamplesHidden() })
+            ksof.wait_state('ksof.dom_observer.page.itemPage', 'exists', () => { state.onExamplesVisible(ksof.itemInfo) }, true)
+            ksof.wait_state('ksof.dom_observer.study_outcome', 'exists', () => { state.onExamplesVisible(ksof.itemInfo) }, true)
 
-                ksof.add_dom_observer(FACTS_QUERY)
-                ksof.wait_state(FACTS_WATCH_STATE, 'exists', () => { state.onExamplesVisible(ksof.itemInfo) }, true)
-            }
-            else if (ksof.itemInfo.on == 'review') {
-                const OUTPUT_ITEM_QUERY = '.outcome p a.item'
-                const OUTPUT_ITEM_WATCH_STATE = 'ksof.dom_observer.'+OUTPUT_ITEM_QUERY
-                
-                ksof.add_dom_observer(OUTPUT_ITEM_QUERY)
-                ksof.wait_state(OUTPUT_ITEM_WATCH_STATE, 'exists', () => { state.onExamplesVisible(ksof.itemInfo) }, true)
-                ksof.wait_state(OUTPUT_ITEM_WATCH_STATE, 'gone', state.onExamplesHidden, true)
-            }
-
+            // not needed, as handled by page_changed event already
+            // ksof.wait_state('ksof.dom_observer.study_outcome', 'gone', () => { state.onExamplesHidden() }, true)
         } else {
             console.error(
-                `${scriptName}: You are not using KameSame Open Framework which this script utlizes`
+                `${scriptName}: You are not using KameSame Open Framework which this script utilizes`
             );
         }
     }
@@ -706,4 +694,4 @@ declare global {
         return segments;
     }
 
-})();
+})(window);

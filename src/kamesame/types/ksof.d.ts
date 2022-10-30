@@ -13,7 +13,8 @@ export declare namespace KSOF {
         | `${SubjectTypeShort},${SubjectTypeShort}`
         | `${SubjectTypeShort},${SubjectTypeShort},${SubjectTypeShort}`
     type IsoDateString = `${number}-${number}-${number}T${number}:${number}:${number}.${number}Z`
-    
+
+
     export declare namespace Core {
         export interface FileCache {
             dir: {
@@ -33,32 +34,34 @@ export declare namespace KSOF {
             save: (name:string, content: string | { [key: string]: any }, extra_attribs?:object) => Promise<string>
             file_nocache: (list:string | string[] | undefined) => void
         }
-    
+
         export interface Version {
             value: string
             compare_to: (needed_version:string) => 'older' | 'same' | 'newer'
         }
-    
+
         export type FailedInclude = {
             name?:string
             url?:string
         }
-    
+
         export type StateCallback = (new_value:StateValue, prev_value:StateValue) => void
-    
+
         export type StateListener = {
             callback?: StateCallback
             persistent: boolean
             value: StateValue
         }
-    
+
         export type UnknownCallback = (...args: unknown[]) => void
-    
+
+        export type AnswerOutcome = 'exactly_correct' | 'reading_correct' | 'alternative_match_completion' | 'alternative_match' | 'incorrect'
+
         export interface ReviewInfo {
-            answer_correct: string | null
-            review_type: string | null
+            answer_correct: AnswerOutcome | null
+            review_type: 'production' | 'recognition' | null
         }
-    
+
         export interface ItemInfo {
             characters: string | null
             meanings: string[] | null
@@ -67,13 +70,33 @@ export declare namespace KSOF {
             parts_of_speech: string[] | null
             wanikani_level: number | null
             tags: string[] | null
-            on: string | null
-            type: string | null
+            type: 'vocabulary' | 'kanji' | null
             summary: {[key: string]: string | string[] | number | null}
+            id: number | null
         }
-    
+
+        export type Page = 'review'
+        | 'reviewSummary'
+        | 'lessons'
+        | 'lessonsSummary'
+        | 'itemPage'
+        | 'search'
+        | 'searchResult'
+        | 'account'
+        | 'home'
+        | null
+
+        export interface PageInfo {
+            on: Page
+        }
+
         export type StateValue = any
-    
+
+        export interface DomObserver {
+            name: string
+            query: string
+        }
+
         export interface Module {
             version: Version
             file_cache: FileCache
@@ -82,13 +105,11 @@ export declare namespace KSOF {
             state_values: {[key:string]: StateValue}
             event_listeners: {[key:string]: UnknownCallback[]}
             include_promises: {[key:string]: Promise<string>}
-            dom_observers: Set<string>
+            dom_observers: DomObserver[]
             itemInfo: ItemInfo
             reviewInfo: ReviewInfo
-        
-            // Settings?: Settings
-            // settings?: {[key:string]: SettingCollection}
-        
+            pageInfo: PageInfo
+
             load_file: (url: string, use_cache?: boolean) => Promise<any>
             get_state: (state_var:string) => StateValue
             set_state: (state_var:string, value:StateValue) => void
@@ -103,17 +124,17 @@ export declare namespace KSOF {
             load_script: (url:string, use_cache?: boolean) => Promise<string>
             load_css: (url:string, use_cache?:boolean) => Promise<string>
             include: (module_list:string) => Promise<{ loaded: string[]; failed: FailedInclude[] }>
-            ready: (module_list:string) => Promise<'ready'> | Promise<'ready'[]>
-            add_dom_observer: (element_query:string) => void
+            ready: (module_list:string) => Promise<'ready' | 'ready'[]>
+            add_dom_observer: (observer:Core.DomObserver) => void
         }
     }
-    
+
     export declare namespace Settings {
-    
+
         declare namespace UI {
             export type ValidateCallback = (value:unknown, config: UserInput) => boolean | string | {valid: boolean, msg: string}
             export type OnChange = (name: string, value: unknown, config: UserInput) => void
-    
+
             export interface UserInput {
                 type: string
                 label?: string       // A string label that appears to the left of (or above) the list element.
@@ -315,5 +336,39 @@ export declare namespace KSOF {
             settings: { [key: string]: SettingCollection }
         }
     }
+
+    export declare namespace Menu {
+
+        export interface Config {
+            name: string
+            submenu?: string
+            title: string
+            class?: string
+            class_html?: string // TODO what is this?
+            on_click: (event: any) => void
+        }
+
+        export interface Ui {
+            style: HTMLStyleElement
+            menu: HTMLDivElement
+            scripts_icon: HTMLLinkElement
+            dropdown_menu: HTMLUListElement
+            header: HTMLLIElement
+        }
+
+        export interface Module {
+            Menu: {
+                insert_script_link: (config: Config) => void
+                ui: Ui
+            }
+        }
+    }
+
+    export declare namespace JQuery {
+        export interface Module {
+            Jquery: {version: string}
+        }
+    }
+
 }
 
