@@ -544,7 +544,7 @@ import { AS } from './types'
             }
 
             .anime-example .ja {
-                font-size: 2em;
+                font-size: 2rem;
             }
 
             .anime-example img {
